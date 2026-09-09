@@ -1,20 +1,22 @@
 # Python API
 
-Public functions can be imported from cartonization. Existing module imports and
-the deprecated cartonization_functions compatibility module remain available,
-including in an installed wheel.
+Import public functions from the `cartonization` package. Use the workflow API
+for saved configurations, complete scenario results and reports.
 
 ## Recommended workflow API
 
 ```python
+from cartonization import export_report, run_scenario
 from cartonization.workflows import load_config
-from cartonization import run_scenario, run_scenarios, prepare_shipment_history
-from cartonization import export_report, export_prepared
 
 config, base = load_config("examples/scenario.json")
 result = run_scenario(config, base_dir=base, progress=print)
 export_report([result], "outputs/my_result")
 ```
+
+The runnable [Python example](../examples/scenario_analysis_example.py) uses
+the same scenario and small practice workbooks as the command-line workflow,
+and creates a fresh output folder on each run.
 
 run_scenario returns ScenarioResult with observed total_cost, total_count,
 packing_efficiency (0–100), coverage, settings, packings, max_fits, shipment_profiles,
@@ -35,7 +37,7 @@ The CLI always creates new output directories. Direct exporter calls write the
 named files in the directory supplied by the caller; use a fresh directory when
 preserving prior results is required.
 
-## Existing analytical helpers
+## Analytical helpers
 
 | Function | Purpose |
 |---|---|
@@ -52,17 +54,17 @@ preserving prior results is required.
 | solve_min_integer(...) | Integer covering optimization |
 | upper_bounds_for_solve_min_integer(b, a) | Safe bounds for nonnegative covering inputs |
 
-calculate_cost_count retains (total_cost, total_count), with optional objective
-and progress parameters. A failed profile now raises AnalysisError instead of
-being skipped. Non-optimal feasible incumbents produce a warning.
+calculate_cost_count returns (total_cost, total_count), with optional objective
+and progress parameters. A failed profile raises AnalysisError.
+Non-optimal feasible incumbents produce a warning.
 
-scenario_analysis retains its existing argument order and six-item return:
+scenario_analysis provides a direct-argument interface with a six-item return:
 (total_cost, total_count, packing_efficiency, packings, max_fits, shipment_profiles).
-random_seed, objective and progress are additional keyword-only options.
+random_seed, objective and progress are keyword-only options.
 shipping_cost_funtion remains accepted as the historical misspelling.
 Explicit sampling/filtering retains legacy extrapolation and emits a warning.
 
-Packing IDs now include a separator between shipper ID and numeric index.
+Packing IDs include a separator between shipper ID and numeric index.
 Treat them as run-local identifiers, not permanent business IDs.
 
 ## Errors
