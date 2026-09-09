@@ -13,7 +13,6 @@ FILES = [
     "CHANGELOG.md",
     "pyproject.toml",
     "constraints.txt",
-    "cartonization_functions.py",
     ".gitattributes",
     ".gitignore",
 ]
@@ -29,11 +28,10 @@ PATTERNS = [
     ".github/workflows/*.yml",
     ".vscode/*.json",
 ]
-SAMPLE_DATA = ["data/reference_test_data.xlsx", "data/shipment_history_test_data.xlsx"]
 
 
 def main():
-    paths = {ROOT / p for p in FILES + SAMPLE_DATA}
+    paths = {ROOT / p for p in FILES}
     for pattern in PATTERNS:
         paths.update(ROOT.glob(pattern))
     if any(not p.is_file() or p.is_symlink() for p in paths):
@@ -42,7 +40,7 @@ def main():
     payloads = {p: p.read_bytes() for p in files}
     manifest = {
         "version": VERSION,
-        "distribution": "no-launchers",
+        "distribution": "source",
         "files": [
             {
                 "path": p.relative_to(ROOT).as_posix(),
@@ -54,8 +52,8 @@ def main():
     }
     output = ROOT / "dist"
     output.mkdir(exist_ok=True)
-    target = output / f"cartonization-{VERSION}-no-launchers.zip"
-    prefix = f"cartonization-{VERSION}-no-launchers/"
+    target = output / f"cartonization-{VERSION}.zip"
+    prefix = f"cartonization-{VERSION}/"
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for p in files:
             info = zipfile.ZipInfo.from_file(p, prefix + p.relative_to(ROOT).as_posix())
