@@ -69,7 +69,7 @@ such as `python3.12 tools/setup_environment.py`.
 Setup creates a separate `.venv` Python environment inside this folder, installs
 the tested dependencies and runs a small solver check. It needs internet access
 for package installation and does not install Python itself. Success ends with
-**“Ready to run cartonization.”** No double-click setup files are required.
+**“Ready to run cartonization.”**
 
 Do not move or copy `.venv` to another computer. Rerun setup after moving the
 source folder or installing a new release.
@@ -136,14 +136,12 @@ See [model assumptions](docs/MODELING.md) for interpretation and limitations.
 
 ## Guides
 
-- [Workflow configurations and examples](docs/WORKFLOWS.md)
+- [Workflows, configurations and Copilot requests](docs/WORKFLOWS.md)
 - [Input formats](docs/DATA_FORMATS.md)
 - [Model assumptions and interpolation](docs/MODELING.md)
-- [Copyable Copilot prompts](docs/PROMPTS.md)
 - [Python API](docs/API.md)
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
-- [Audit and release verification](docs/VERIFICATION.md)
-- [Future capabilities](docs/BACKLOG.md)
+- [Maintenance, verification and future capabilities](docs/MAINTENANCE.md)
 - [Release notes](CHANGELOG.md)
 
 ## Updating or asking for help
@@ -155,39 +153,3 @@ requirements change; preserve local changes before updating.
 
 When requesting help, provide the release version, configuration and issue report.
 The [troubleshooting guide](docs/TROUBLESHOOTING.md) explains common failures.
-
-## For maintainers
-
-### Bundled data and package files
-
-- `examples/` contains ready-to-run configurations and a Python example.
-  `examples/data/` holds the small synthetic workbooks used by these examples
-  and automated checks. User input workbooks belong in `local_data/`.
-- `MANIFEST.in` tells Python's packaging tool which supporting files to include
-  in a source distribution. The ZIP builder has its own explicit inclusion list.
-- `MANIFEST.json` is generated only inside release ZIPs. It records packaged file
-  names, sizes and SHA-256 hashes for checking file integrity. It is not needed
-  to run an analysis, and setup does not automatically verify its hashes.
-- `cartonization/` contains all analysis functions and workflows. Python scripts
-  import directly from this package; there is one public entry point.
-
-### Development and releases
-
-Run these with the virtual environment's Python:
-
-```sh
-python -m pip install -c constraints.txt -e ".[dev]"
-python -m pytest -q
-python -m ruff check .
-python -m ruff format --check .
-python -m build
-python tools/build_release.py
-```
-
-The last command creates `dist/cartonization-0.2.0.zip` and its
-SHA-256 checksum. It includes source, guides, tests and bundled examples. Local
-analysis outputs, user data, temporary scripts, caches and virtual environments
-are excluded. Windows and Mac users both run setup from the VS Code terminal.
-
-The GitHub Actions workflow defines Windows, Mac and Linux checks. See the
-repository's **Actions** tab for the results of each run.
