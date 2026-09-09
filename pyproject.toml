@@ -16,13 +16,10 @@ dev = ["pytest>=8.4,<9", "ruff>=0.16,<0.17", "build>=1.2,<2"]
 [project.scripts]
 cartonization = "cartonization.cli:main"
 
-[tool.setuptools]
-py-modules = ["cartonization_functions"]
-
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cartonization*"]
-exclude = ["data*", "tests*", "examples*"]
+exclude = ["tests*", "examples*"]
 
 [tool.ruff]
 line-length = 100
