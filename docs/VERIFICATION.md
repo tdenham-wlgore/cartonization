@@ -24,8 +24,6 @@ Measured locally on Apple silicon with Python 3.13.6 and constraints.txt depende
 |---|---|
 | Capped packing selection: 1,000 candidates, 6 carton types, cap 50; median of 3 runs | Original distance scan 0.502 s; incremental distances 0.0243 s; about 20.7x faster |
 | Selection equivalence in that benchmark | Identical selected points and ordering |
-| Bundled full example, 551 profiles / 82,887 frequency-weighted orders | 56.1 s; all eligible demand included |
-| Full example outputs | Modeled cost $1,080,624.23; 83,385 shippers; efficiency 51.1541% |
 
 Traced peak Python allocations in the focused selection benchmark were 280,500
 bytes for the original scan and 464,816 bytes for incremental distances. The
@@ -33,12 +31,11 @@ speed gain trades approximately 180 KiB of extra temporary memory for avoiding
 repeated distance work on this fixture. This is not whole-process memory usage.
 
 These are specific local measurements, not a universal end-to-end speedup.
-The old example exceeded a 45-second exploratory cutoff, so no complete old/new
-runtime ratio is claimed. Interpolation remains the default; checked-only mode
-can be much slower. Many distinct carton types can still create a large candidate set.
+Interpolation remains the default; checked-only mode can be much slower.
+Many distinct carton types can still create a large candidate set.
 
 Run `python -m tools.benchmark` from the source folder to repeat the focused
-selection benchmark. Run examples/full_example.json to repeat the full example.
+selection benchmark. Use `examples/comparison.json` for the bundled workflow check.
 Runtime varies with CPU, input patterns, solver load and settings.
 
 ## Report verification
@@ -58,11 +55,11 @@ Temporary scripts, virtual environments, caches and past outputs are excluded.
 
 The release uses normal package installation, not an editable installation.
 This avoids dependence on the source folder being on Python's import path.
-The wheel includes the deprecated cartonization_functions compatibility module.
+The wheel contains the `cartonization` package used by the CLI and Python examples.
 
 A fresh macOS extraction into a path with spaces passed setup and the CBC
-diagnostic. The installed package and deprecated compatibility import were checked
-from outside the source folder, followed by successful comparison and preparation
+diagnostic. The installed package was checked from outside the source folder,
+followed by successful comparison and preparation
 commands using the extracted examples. Windows execution cannot be exercised on this Mac.
 Windows setup instructions and a Windows/Mac/Linux CI matrix are included.
 Remote CI had not run at the time of the original ZIP verification recorded here.
