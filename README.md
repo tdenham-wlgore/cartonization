@@ -160,19 +160,16 @@ The [troubleshooting guide](docs/TROUBLESHOOTING.md) explains common failures.
 
 ### Bundled data and package files
 
-- `data/` contains the original, larger reference and shipment-history example,
-  used by `examples/full_example.json` and the Python example.
 - `examples/` contains ready-to-run configurations and a Python example.
-  `examples/data/` holds small synthetic workbooks for learning the workflows
-  and checking expected results. User input workbooks belong in `local_data/`.
+  `examples/data/` holds the small synthetic workbooks used by these examples
+  and automated checks. User input workbooks belong in `local_data/`.
 - `MANIFEST.in` tells Python's packaging tool which supporting files to include
   in a source distribution. The ZIP builder has its own explicit inclusion list.
 - `MANIFEST.json` is generated only inside release ZIPs. It records packaged file
   names, sizes and SHA-256 hashes for checking file integrity. It is not needed
   to run an analysis, and setup does not automatically verify its hashes.
-- `cartonization_functions.py` forwards older imports to the `cartonization`
-  package. New code should import from `cartonization`; the compatibility file
-  has no separate analysis logic.
+- `cartonization/` contains all analysis functions and workflows. Python scripts
+  import directly from this package; there is one public entry point.
 
 ### Development and releases
 
@@ -187,7 +184,7 @@ python -m build
 python tools/build_release.py
 ```
 
-The last command creates `dist/cartonization-0.2.0-no-launchers.zip` and its
+The last command creates `dist/cartonization-0.2.0.zip` and its
 SHA-256 checksum. It includes source, guides, tests and bundled examples. Local
 analysis outputs, user data, temporary scripts, caches and virtual environments
 are excluded. Windows and Mac users both run setup from the VS Code terminal.
