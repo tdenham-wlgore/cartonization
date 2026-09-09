@@ -1,15 +1,18 @@
 # Troubleshooting
 
+Follow the [README setup instructions](../README.md#3-run-setup-in-vs-code) in
+the VS Code terminal on both Windows and Mac.
+
 | Symptom | What to do |
 |---|---|
 | Python command is missing | Install Python 3.10–3.13 with company IT's approved method. On Windows include the Python launcher. |
 | `py` is not recognized on Windows | If a supported Python is on your PATH, run `python tools\setup_environment.py` in the extracted folder. Otherwise ask IT to install the Python launcher. |
 | `py -3.12` cannot find Python 3.12 | Install the recommended Python 3.12 or replace `-3.12` with your installed supported version: `-3.10`, `-3.11` or `-3.13`. |
-| Setup selected Python 3.14 or newer | Run tools/setup_environment.py explicitly with a supported interpreter, preferably Python 3.12. |
+| Setup selected Python 3.14 or newer | Run tools/setup_environment.py explicitly with a supported interpreter, preferably Python 3.12: `py -3.12 tools\setup_environment.py` on Windows or `python3.12 tools/setup_environment.py` on Mac. |
 | pip cannot download packages | Check proxy/network access with IT. The repository does not change company network settings. |
 | Wrong interpreter / module not found | Select this folder's .venv in VS Code, or use its Python executable explicitly. |
 | CBC unavailable or blocked | Rerun setup and doctor. Check antivirus/application-control policy with IT. The pinned PuLP distribution supplies CBC on supported platforms. |
-| macOS blocks the launcher | Run python3 tools/setup_environment.py from Terminal in the extracted folder. |
+| `python3` is not recognized on Mac | Install a supported Python using company IT's approved method, then reopen the VS Code terminal and run `python3 tools/setup_environment.py`. |
 | Worksheet or column is missing | Read the issue report, correct the JSON sheet/header settings, then validate again. Names are case-sensitive. |
 | Selected ID missing | Correct the selected list, reference workbook or explicit override. Do not silently omit the ID. |
 | Formula input rejected | Paste the calculated values into a separate input workbook, preserving the original. |
