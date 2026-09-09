@@ -30,7 +30,7 @@ def main():
         )
     code = (
         "from cartonization import max_cartons_four_quadrant,solve_min_integer; "
-        "import cartonization,cartonization_functions; "
+        "import cartonization; "
         "assert max_cartons_four_quadrant((.3,.3,.3),(.1,.1,.1)) == 27; "
         "assert solve_min_integer([2],[[1]],[3],upper_bounds=[2]) == ([2],6.0,'Optimal'); "
         "print('Installed package:',cartonization.__file__)"
