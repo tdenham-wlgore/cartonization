@@ -1,0 +1,18 @@
+{
+  "input_file": "data/order_lines.xlsx",
+  "sheets": [
+    "East",
+    "West"
+  ],
+  "mapping_file": "data/order_lines.xlsx",
+  "mapping_sheet": "SKU Mapping",
+  "sku_column": "SKU",
+  "mapping_sku_column": "SKU",
+  "mapping_carton_column": "CARTON",
+  "order_key_columns": [
+    "ORDER",
+    "SHIP_TO"
+  ],
+  "quantity_mode": "column",
+  "quantity_column": "QUANTITY"
+}

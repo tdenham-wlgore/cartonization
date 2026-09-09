@@ -1,0 +1,6 @@
+# Tested portable runtime set for Python 3.10-3.13.
+numpy==2.2.6
+openpyxl==3.1.5
+et-xmlfile==2.0.0
+py3dbp==1.1.2
+pulp==3.3.0

@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cartonization"
+version = "0.2.0"
+description = "Reproducible cartonization analysis and Excel workflows"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+dependencies = ["numpy>=1.26,<3", "openpyxl>=3.1.5,<4", "py3dbp==1.1.2", "pulp>=3.3,<3.4"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.4,<9", "ruff>=0.16,<0.17", "build>=1.2,<2"]
+
+[project.scripts]
+cartonization = "cartonization.cli:main"
+
+[tool.setuptools]
+py-modules = ["cartonization_functions"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cartonization*"]
+exclude = ["data*", "tests*", "examples*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = [".codex_tmp", "outputs", "dist", "build"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.format]
+line-ending = "lf"
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

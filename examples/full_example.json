@@ -1,0 +1,27 @@
+{
+  "name": "Bundled history",
+  "history_file": "../data/shipment_history_test_data.xlsx",
+  "history_sheet": "Sheet1",
+  "reference_file": "../data/reference_test_data.xlsx",
+  "cartons": [
+    "C24",
+    "C99",
+    "C32",
+    "C21",
+    "C16",
+    "C13"
+  ],
+  "shippers": [
+    "S157G01",
+    "S858G01",
+    "S916G01",
+    "NCG2002",
+    "NCG2003",
+    "NCG2005",
+    "NCG2006",
+    "NCG2007"
+  ],
+  "vector_length_limit": 4,
+  "fixed_cost": 2,
+  "interpolation_threshold": 13
+}

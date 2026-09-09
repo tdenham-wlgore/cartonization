@@ -1,0 +1,19 @@
+{
+  "name": "Current",
+  "history_file": "data/history.xlsx",
+  "history_sheet": "East",
+  "reference_file": "data/reference.xlsx",
+  "cartons": [
+    "C_A",
+    "C_B"
+  ],
+  "shippers": [
+    "S_BIG"
+  ],
+  "shipper_overrides": {
+    "S_BIG": {
+      "cost": 18
+    }
+  },
+  "fixed_cost": 2
+}

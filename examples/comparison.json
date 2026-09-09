@@ -1,0 +1,41 @@
+{
+  "defaults": {
+    "history_file": "data/history.xlsx",
+    "history_sheet": "East",
+    "reference_file": "data/reference.xlsx",
+    "cartons": [
+      "C_A",
+      "C_B"
+    ],
+    "fixed_cost": 2,
+    "shipper_overrides": {
+      "S_BIG": {
+        "cost": 18
+      },
+      "S_SMALL": {
+        "cost": 10
+      }
+    }
+  },
+  "scenarios": [
+    {
+      "name": "Current",
+      "shippers": [
+        "S_BIG"
+      ],
+      "shipper_overrides": {
+        "S_BIG": {
+          "cost": 18
+        }
+      }
+    },
+    {
+      "name": "Add small shipper",
+      "baseline": "Current",
+      "shippers": [
+        "S_BIG",
+        "S_SMALL"
+      ]
+    }
+  ]
+}
