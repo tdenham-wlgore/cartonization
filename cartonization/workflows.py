@@ -93,7 +93,7 @@ def file_digest(path):
         return digest.hexdigest()
 
 
-def _catalog(config, path, kind, selected):
+def _catalog(config, path, kind, selected, *, shipping_cost_function=None):
     sheet = config.get(f"{kind}_sheet", f"container_{kind}_dims")
     id_col = config.get(f"{kind}_id_column", kind.upper())
     dim_cols = config.get("dimension_columns", ["LENGTH", "WIDTH", "HEIGHT"])
@@ -128,12 +128,16 @@ def _catalog(config, path, kind, selected):
             _keys(override, {"dimensions", "max_units", "cost"}, f"shipper_overrides.{rid}")
             dims = dimensions(override.get("dimensions", [row.get(c) for c in dim_cols]), location)
             units = integer(override.get("max_units", row.get(max_col)), location + ".max_units")
-            cost = override.get(
-                "cost",
-                shipping_cost_zone4(
-                    dims, number(config.get("fixed_cost", 0), "fixed_cost", nonnegative=True)
-                ),
-            )
+            fixed_cost = number(config.get("fixed_cost", 0), "fixed_cost", nonnegative=True)
+            if "cost" in override:
+                cost = override["cost"]
+            else:
+                cost_function = (
+                    shipping_cost_zone4
+                    if shipping_cost_function is None
+                    else shipping_cost_function
+                )
+                cost = cost_function(shipper=dims, fixed_cost=fixed_cost)
             result[rid] = dict(zip(("length", "width", "height"), dims)) | {
                 "volume": math.prod(dims),
                 "max_units": units,
@@ -142,8 +146,10 @@ def _catalog(config, path, kind, selected):
     return result
 
 
-def validate_scenario_inputs(config, base_dir="."):
-    """Read and validate selected data/settings without packing or solving."""
+def validate_scenario_inputs(config, base_dir=".", *, shipping_cost_function=None):
+    """Validate data/settings, including callback costs, without packing or solving."""
+    if shipping_cost_function is not None and not callable(shipping_cost_function):
+        raise invalid("shipping_cost_function", "Provide a callable or None.")
     _keys(config, SCENARIO_KEYS, "scenario")
     for key in ("history_file", "history_sheet", "reference_file", "cartons", "shippers"):
         if key not in config:
@@ -156,7 +162,9 @@ def validate_scenario_inputs(config, base_dir="."):
         history, config["history_sheet"], cartons, config.get("frequency_column", "FREQUENCY")
     )
     cs = _catalog(config, reference, "carton", cartons)
-    ss = _catalog(config, reference, "shipper", shippers)
+    ss = _catalog(
+        config, reference, "shipper", shippers, shipping_cost_function=shipping_cost_function
+    )
     if not profiles:
         raise invalid(
             config["history_sheet"], "No positive-frequency demand for the selected cartons."
@@ -182,15 +190,22 @@ def validate_scenario_inputs(config, base_dir="."):
     return profiles, cs, ss, history, reference
 
 
-def run_scenario(config, base_dir=".", progress=None):
-    """Run one saved scenario; return observed totals with reproducible provenance."""
+def run_scenario(config, base_dir=".", progress=None, *, shipping_cost_function=None):
+    """Run a scenario with observed totals and optional Python shipping-cost callback.
+
+    The callback receives shipper=(length, width, height) and fixed_cost. Explicit
+    cost overrides take precedence. Evaluated callback costs are saved in the
+    provenance configuration so it can be rerun without the callback.
+    """
     _keys(config, SCENARIO_KEYS, "scenario")
     for key in ("history_file", "reference_file"):
         if key not in config:
             raise invalid("scenario", f"Required setting {key!r} is missing.")
     sources = [file_path(config[k], base_dir) for k in ("history_file", "reference_file")]
     hashes = {path: file_digest(path) for path in sources}
-    profiles, cartons, shippers, history, reference = validate_scenario_inputs(config, base_dir)
+    profiles, cartons, shippers, history, reference = validate_scenario_inputs(
+        config, base_dir, shipping_cost_function=shipping_cost_function
+    )
     result = analyze_loaded(
         profiles,
         cartons,
@@ -212,18 +227,31 @@ def run_scenario(config, base_dir=".", progress=None):
             "source workbooks",
             "An input changed while the analysis was running; rerun with unchanged inputs.",
         )
+    saved_config = deepcopy(config)
+    cost_model = (
+        "Legacy Zone 4 dimensional-weight estimate + fixed cost; "
+        "explicit shipper cost overrides take precedence."
+    )
+    if shipping_cost_function is not None:
+        overrides = saved_config.setdefault("shipper_overrides", {})
+        for sid, shipper in shippers.items():
+            overrides[sid] = {**(overrides.get(sid) or {}), "cost": shipper["cost"]}
+        cost_model = (
+            "Custom Python shipping-cost callback; explicit shipper cost overrides take "
+            "precedence. Evaluated costs are saved as overrides in the configuration."
+        )
     result.provenance = {
         "input_files": [
             {"name": history.name, "sha256": hashes[history]},
             {"name": reference.name, "sha256": hashes[reference]},
         ],
         "history_sheet": config["history_sheet"],
-        "config": deepcopy(config),
+        "config": saved_config,
         "python": platform.python_version(),
         "dependencies": {
             n: version(n) for n in ("cartonization", "numpy", "openpyxl", "py3dbp", "pulp")
         },
-        "cost_model": "Legacy Zone 4 dimensional-weight estimate + fixed cost; explicit shipper cost overrides take precedence.",
+        "cost_model": cost_model,
     }
     return result
 
@@ -311,16 +339,22 @@ def compare_scenarios(results, specs):
     return rows, usage
 
 
-def run_scenarios(config, base_dir=".", progress=None):
-    """Run a batch strictly: no combined final report if any scenario fails."""
+def run_scenarios(config, base_dir=".", progress=None, *, shipping_cost_function=None):
+    """Run a batch strictly, validating every scenario before solving.
+
+    A cost callback may run during both prevalidation and scenario execution;
+    callbacks should be deterministic and free of side effects.
+    """
     specs = expand_batch(config)
     for spec in specs:
-        validate_scenario_inputs(spec, base_dir)
+        validate_scenario_inputs(spec, base_dir, shipping_cost_function=shipping_cost_function)
     results = []
     for i, spec in enumerate(specs):
         if progress:
             progress(f"Scenario {i + 1} of {len(specs)}: {spec['name']}")
-        results.append(run_scenario(spec, base_dir, progress))
+        results.append(
+            run_scenario(spec, base_dir, progress, shipping_cost_function=shipping_cost_function)
+        )
     comparison, usage = compare_scenarios(results, specs)
     return results, comparison, usage
 
