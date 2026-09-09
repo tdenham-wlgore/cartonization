@@ -29,7 +29,6 @@ throughout. Low-capacity mixed packings use the repeatable py3dbp heuristic.
 Single-type capacities use the constructive four-quadrant method.
 
 Packing records identify `four_quadrant`, `interpolated` or `3d_checked`.
-No repeated confirmation is needed to use the default interpolation.
 
 ## What the solver minimizes
 
@@ -47,7 +46,9 @@ Zone 4 curve is the repository's legacy dimensional-weight approximation, with
 a divisor of 139 and a configurable fixed cost. It is not a current carrier
 tariff and does not include actual weight, destination variation or surcharges.
 An explicit per-shipper cost override is treated as the complete cost, not an
-additional charge on top of fixed_cost.
+additional charge on top of fixed_cost. Python workflows can supply a
+[custom cost function](API.md#custom-shipping-cost-functions); explicit per-shipper
+cost overrides take precedence, and evaluated costs are saved with the results.
 
 ## Packing capacities and bounds
 
@@ -83,14 +84,10 @@ fraction of shipment frequency, sometimes more because complete profiles are kep
 Vector filters are also explicit: length limits the number of distinct carton
 types; frequency filters on the aggregated frequency of each presence pattern.
 
-New workflow results report observed totals and included/excluded demand. They
+Workflow results report observed totals and included/excluded demand. They
 do not extrapolate. Comparing a baseline and scenario requires matching demand
 and sampling/filter settings. Efficiency uses total carton volume divided by
 total used shipper volume, not an unweighted average of profile efficiencies.
-
-The legacy six-tuple scenario_analysis API retains its frequency-scaled estimates
-for explicitly sampled/filtered calls, with a warning. That scaling assumes omitted
-orders behave like included orders; it is not an unbiased estimator guarantee.
 
 ## Physical and operational scope
 
