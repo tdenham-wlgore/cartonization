@@ -8,7 +8,6 @@ import warnings
 from collections import Counter
 from dataclasses import dataclass, field
 
-from .io import build_shipment_profiles, load_reference_mapping
 from .packing import generate_max_fits_dict, generate_packings
 from .solver import solve_min_integer, upper_bounds_for_solve_min_integer
 from .validation import AnalysisError, dimensions, identifiers, integer, number
@@ -184,7 +183,7 @@ def analyze_loaded(
     solver_time_limit=60,
     progress=None,
 ):
-    """Analyze in-memory inputs; used by file workflows and the legacy wrapper."""
+    """Analyze in-memory inputs and return structured observed results."""
     if not profiles:
         raise ValueError("No positive-frequency demand for the selected cartons.")
     carton_list = identifiers(list(cartons), "cartons")
@@ -333,116 +332,4 @@ def analyze_loaded(
         shippers,
         cartons,
         warnings=notes,
-    )
-
-
-def scenario_analysis(
-    history_file,
-    history_file_sheet_name,
-    history_file_fre_col,
-    history_sample_ratio,
-    vector_length_limit,
-    vector_freq_limit,
-    ref_file,
-    dim_cols,
-    ref_file_shipper_sheet,
-    ref_file_shipper_id_col,
-    ref_file_shipper_max_col,
-    ref_file_carton_sheet,
-    ref_file_carton_id_col,
-    carton_list,
-    shipper_list,
-    shipping_cost_function=None,
-    shipper_fixed_cost=0.0,
-    shipper_constrained_by_max_units=False,
-    simple_frontier_max_fit_threshold=10,
-    packings_per_shipper_cap=100,
-    solver_time_limit=60,
-    shipping_cost_funtion=None,
-    *,
-    random_seed=0,
-    objective="volume_penalty",
-    progress=None,
-):
-    """Legacy six-tuple API. Explicit samples retain historical frequency extrapolation.
-
-    New run_scenario results distinguish observed totals and coverage. The default
-    now interpolates at capacity 10, while None opts into geometric checks.
-    """
-    if shipping_cost_function is None:
-        shipping_cost_function = shipping_cost_funtion
-    if shipping_cost_function is None:
-        raise ValueError("shipping_cost_function is required.")
-    if len(dim_cols) != 3:
-        raise ValueError("dim_cols must contain exactly three column names.")
-    carton_list = identifiers(carton_list, "carton_list")
-    shipper_list = identifiers(shipper_list, "shipper_list")
-    fixed = number(shipper_fixed_cost, "shipper_fixed_cost", nonnegative=True)
-    cartons = load_reference_mapping(
-        ref_file,
-        ref_file_carton_sheet,
-        [ref_file_carton_id_col] + list(dim_cols),
-        ref_file_carton_id_col,
-        carton_list,
-        lambda r: dimensions([r[c] for c in dim_cols]),
-    )
-
-    def build_shipper(row):
-        dims = dimensions([row[c] for c in dim_cols])
-        return dict(zip(("length", "width", "height"), dims)) | {
-            "max_units": integer(row[ref_file_shipper_max_col], "max_units"),
-            "volume": math.prod(dims),
-            "cost": number(
-                shipping_cost_function(shipper=dims, fixed_cost=fixed),
-                "shipping cost",
-                nonnegative=True,
-            ),
-        }
-
-    shippers = load_reference_mapping(
-        ref_file,
-        ref_file_shipper_sheet,
-        [ref_file_shipper_id_col] + list(dim_cols) + [ref_file_shipper_max_col],
-        ref_file_shipper_id_col,
-        shipper_list,
-        build_shipper,
-    )
-    # Reference workbook row order must not override the caller's model ordering.
-    cartons = {cid: cartons[cid] for cid in carton_list}
-    shippers = {sid: shippers[sid] for sid in shipper_list}
-    profiles = build_shipment_profiles(
-        history_file, history_file_sheet_name, carton_list, history_file_fre_col
-    )
-    result = analyze_loaded(
-        profiles,
-        cartons,
-        shippers,
-        sample_ratio=history_sample_ratio,
-        vector_length_limit=vector_length_limit,
-        vector_freq_limit=vector_freq_limit,
-        random_seed=random_seed,
-        objective=objective,
-        threshold=simple_frontier_max_fit_threshold,
-        packing_cap=packings_per_shipper_cap,
-        constrain_max_units=shipper_constrained_by_max_units,
-        solver_time_limit=solver_time_limit,
-        progress=progress,
-    )
-    fraction = result.coverage["included_fraction"]
-    if fraction < 1:
-        warnings.warn(
-            "Legacy tuple totals are frequency-extrapolated estimates. Use run_scenario for observed totals and coverage.",
-            RuntimeWarning,
-            stacklevel=2,
-        )
-    for message in result.warnings:
-        if "optimal" in message:
-            warnings.warn(message, RuntimeWarning, stacklevel=2)
-    return (
-        result.total_cost / fraction,
-        {sid: round(qty / fraction) for sid, qty in result.total_count.items()},
-        round(result.packing_efficiency, 0),
-        result.packings,
-        result.max_fits,
-        result.shipment_profiles,
     )
