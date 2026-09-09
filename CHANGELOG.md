@@ -2,6 +2,11 @@
 
 ## 0.2.0
 
+- Consolidated all public functions in the cartonization package and removed the
+  standalone compatibility module. Python scripts import from cartonization.
+- Removed the larger bundled history/reference dataset and its configuration.
+  All runnable examples now use the small synthetic workbooks in examples/data/.
+
 - Consolidated setup and first-use instructions in README.md for GitHub users.
 - Removed both Windows and Mac double-click setup files. Users run the shared
   Python setup utility from the VS Code terminal on either platform.
@@ -27,9 +32,10 @@
 - Added streaming readers, schema checks, a shared Windows/Mac setup utility,
   tests and an explicit release ZIP manifest.
 
-### Compatibility
+### Analytical API and result changes
 
-Existing imports and the legacy six-tuple scenario API remain available.
+The cartonization package exposes both workflow APIs and analytical helpers,
+including the six-item scenario_analysis result.
 Correctness fixes can change capacities, shipper counts and reported costs.
 Packing IDs are now run-local strings with a separator; do not parse the old format.
 Input formulas must be supplied as values. Bad counts and missing selected IDs
