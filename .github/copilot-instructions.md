@@ -4,7 +4,7 @@ This is a Python analysis library for non-programmers. Use the installed package
 and saved JSON configurations to answer analysis requests. Do not rewrite packing
 algorithms or invent replacement calculations to work around an error.
 
-Read START_HERE.md for setup, docs/WORKFLOWS.md for configurations, and
+Read README.md for setup, docs/WORKFLOWS.md for configurations, and
 docs/MODELING.md for interpretation. First check the active .venv interpreter.
 Run `python -m cartonization doctor` if setup is uncertain. Use the full path to
 the .venv Python executable when terminal activation is uncertain.
@@ -12,7 +12,7 @@ the .venv Python executable when terminal activation is uncertain.
 For analyses:
 1. Inspect the user's input sheet names and headers. Preserve IDs as text.
 2. Create a named JSON configuration with paths relative to that configuration.
-   Keep user work in local_data/ and configurations in a user-owned folder.
+   Keep user work in local_data/ and configurations in my_scenarios/.
 3. Run `python -m cartonization validate CONFIG.json`, then prepare, run, or compare.
 4. Read the actual generated results.json and report.xlsx; report cost, usage,
    efficiency, coverage, objective and any solver limitations. Link the output.
