@@ -28,7 +28,6 @@ the VS Code terminal on both Windows and Mac.
 If setup is interrupted, rerun it. If .venv was copied or the folder moved, remove
 only the generated .venv folder and rerun setup; keep your input/configuration files.
 
-Windows installations and company policy need a recipient-side smoke check.
-The included GitHub Actions workflow defines Windows, Mac and Linux checks.
-Check the repository's **Actions** tab for run results; the workflow's presence
-does not mean those remote checks have already passed.
+See [maintenance and verification](MAINTENANCE.md) for platform checks and current
+GitHub Actions results. Company network and application policies should also be
+checked on a recipient's computer.
