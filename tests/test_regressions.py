@@ -26,6 +26,7 @@ from cartonization.workflows import (
     prepare_shipment_history,
     run_scenario,
     run_scenarios,
+    validate_scenario_inputs,
 )
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -436,36 +437,107 @@ def test_input_changes_during_run_are_detected(tmp_path):
         run_scenario(config, base, progress)
 
 
-def test_legacy_and_saved_workflow_respect_the_same_selected_order():
-    from cartonization.analysis import scenario_analysis
-
+def test_workflow_preserves_selected_carton_and_shipper_order():
     config, base = load_config(ROOT / "examples/scenario.json")
     config.pop("shipper_overrides")
     config["cartons"] = ["C_B", "C_A"]
     config["shippers"] = ["S_SMALL", "S_BIG"]
-    current = run_scenario(config, base)
-    legacy = scenario_analysis(
-        str(base / config["history_file"]),
-        "East",
-        "FREQUENCY",
-        1,
-        2,
-        0,
-        str(base / config["reference_file"]),
-        ["LENGTH", "WIDTH", "HEIGHT"],
-        "container_shipper_dims",
-        "SHIPPER",
-        "MAXUNITS",
-        "container_carton_dims",
-        "CARTON",
-        config["cartons"],
-        config["shippers"],
-        shipping_cost_zone4,
-        shipper_fixed_cost=2,
+    result = run_scenario(config, base)
+    assert list(result.cartons) == ["C_B", "C_A"]
+    assert list(result.shippers) == ["S_SMALL", "S_BIG"]
+    assert list(result.total_count) == ["S_SMALL", "S_BIG"]
+    assert list(result.max_fits) == [
+        ("S_SMALL", "C_B"),
+        ("S_SMALL", "C_A"),
+        ("S_BIG", "C_B"),
+        ("S_BIG", "C_A"),
+    ]
+
+
+def test_custom_costs_respect_overrides_and_can_be_replayed_from_json():
+    config, base = load_config(ROOT / "examples/scenario.json")
+    config["shippers"] = ["S_BIG", "S_SMALL"]
+    config["shipper_overrides"] = {
+        "S_BIG": {"dimensions": [9, 6, 4], "max_units": 123},
+        "S_SMALL": {"cost": 7},
+    }
+    original = json.loads(json.dumps(config))
+    calls = []
+
+    def custom_cost(*, shipper, fixed_cost):
+        calls.append((shipper, fixed_cost))
+        return sum(shipper) + fixed_cost
+
+    result = run_scenario(config, base, shipping_cost_function=custom_cost)
+    assert calls == [((9, 6, 4), 2)]
+    assert result.shippers["S_BIG"]["cost"] == 21
+    assert result.shippers["S_SMALL"]["cost"] == 7
+    assert config == original
+    saved = json.loads(json.dumps(result.to_dict()))["provenance"]["config"]
+    assert saved["shipper_overrides"] == {
+        "S_BIG": {"dimensions": [9, 6, 4], "max_units": 123, "cost": 21},
+        "S_SMALL": {"cost": 7},
+    }
+    replay = run_scenario(saved, base)
+    assert (replay.total_cost, replay.total_count, replay.packing_efficiency) == (
+        result.total_cost,
+        result.total_count,
+        result.packing_efficiency,
     )
-    assert legacy[0] == current.total_cost
-    assert legacy[1] == current.total_count
-    assert legacy[2] == round(current.packing_efficiency)
-    assert legacy[3] == current.packings
-    assert legacy[4] == current.max_fits
-    assert legacy[5] == current.shipment_profiles
+
+
+@pytest.mark.parametrize("cost", [-1, float("inf"), float("nan"), "invalid", True])
+def test_custom_cost_validation_rejects_invalid_prices(cost):
+    config, base = load_config(ROOT / "examples/scenario.json")
+    config.pop("shipper_overrides")
+    with pytest.raises(InputError):
+        validate_scenario_inputs(config, base, shipping_cost_function=lambda **kwargs: cost)
+
+
+def test_custom_cost_requires_callable_even_when_prices_are_overridden():
+    config, base = load_config(ROOT / "examples/scenario.json")
+    with pytest.raises(InputError, match="callable"):
+        run_scenario(config, base, shipping_cost_function=123)
+
+
+def test_custom_cost_preview_reports_observed_totals():
+    config, base = load_config(ROOT / "examples/scenario.json")
+    config.pop("shipper_overrides")
+    config["sample_ratio"] = 0.5
+    result = run_scenario(config, base, shipping_cost_function=lambda **kwargs: 5)
+    assert 0.5 <= result.coverage["included_fraction"] < 1
+    assert result.total_cost == result.coverage["included_frequency"] * 5
+    assert sum(result.total_count.values()) == result.coverage["included_frequency"]
+
+
+def test_batch_custom_costs_match_explicit_prices():
+    config, base = load_config(ROOT / "examples/comparison.json")
+    config["defaults"].pop("shipper_overrides")
+    config["defaults"]["objective"] = "shipping_cost"
+    for scenario in config["scenarios"]:
+        scenario.pop("shipper_overrides", None)
+
+    def custom_cost(*, shipper, fixed_cost):
+        length, width, height = shipper
+        return length * width * height / 24 + fixed_cost
+
+    custom, comparison, usage = run_scenarios(config, base, shipping_cost_function=custom_cost)
+    explicit_config = json.loads(json.dumps(config))
+    explicit_config["defaults"]["shipper_overrides"] = {
+        "S_BIG": {"cost": 10},
+        "S_SMALL": {"cost": 3},
+    }
+    explicit_config["scenarios"][0]["shipper_overrides"] = {"S_BIG": {"cost": 10}}
+    explicit, expected_comparison, expected_usage = run_scenarios(explicit_config, base)
+    assert [(r.total_cost, r.total_count) for r in custom] == [
+        (r.total_cost, r.total_count) for r in explicit
+    ]
+    assert comparison == expected_comparison
+    assert usage == expected_usage
+
+
+def test_json_configs_do_not_accept_executable_cost_functions():
+    config, base = load_config(ROOT / "examples/scenario.json")
+    config["shipping_cost_function"] = "some.module.function"
+    with pytest.raises(InputError, match="Unknown settings"):
+        validate_scenario_inputs(config, base)
