@@ -1,0 +1,25 @@
+name: CI
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: ["3.10", "3.12", "3.13"]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install -c constraints.txt -e ".[dev]"
+      - run: python -m cartonization doctor
+      - run: python -m ruff check .
+      - run: python -m ruff format --check .
+      - run: python -m pytest -q
+      - run: python -m cartonization compare examples/comparison.json
+      - run: python -m cartonization prepare examples/preparation.json
+      - run: python -m build
+      - run: python tools/check_installed.py --install-wheel
+      - run: python tools/build_release.py
