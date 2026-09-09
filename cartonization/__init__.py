@@ -19,7 +19,6 @@ _EXPORTS = {
     "generate_packings": "packing",
     "shipping_cost_zone4": "costs",
     "calculate_cost_count": "analysis",
-    "scenario_analysis": "analysis",
     "ScenarioResult": "analysis",
     "validate_scenario_inputs": "workflows",
     "prepare_shipment_history": "workflows",
