@@ -15,3 +15,4 @@ build/
 local_data/
 my_scenarios/
 .ipynb_checkpoints/
+/MANIFEST.json
