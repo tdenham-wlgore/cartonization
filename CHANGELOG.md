@@ -2,8 +2,11 @@
 
 ## 0.2.0
 
-- Added a separately named distribution without the optional Windows launcher,
-  with command-based Windows setup instructions and matching package manifests.
+- Consolidated setup and first-use instructions in README.md for GitHub users.
+- Removed both Windows and Mac double-click setup files. Users run the shared
+  Python setup utility from the VS Code terminal on either platform.
+- Kept the generated file-and-checksum manifest inside release ZIPs; it is not
+  maintained as a source file in GitHub.
 - Added saved JSON workflows for validation, shipment preparation, single scenarios,
   batches and baseline comparisons, with Excel/JSON reports and input provenance.
 - Preserved capacity interpolation by default at single-type capacity >= 10.
@@ -21,8 +24,8 @@
 - Accelerated capped packing selection with incremental nearest distances, pruned
   candidate enumeration, removed redundant frontier scans and cached capacities.
 - Aligned legacy and saved-config model ordering with the user's selected ID order.
-- Added streaming readers, schema checks, Windows/Mac setup launchers, tests and
-  an explicit release ZIP manifest.
+- Added streaming readers, schema checks, a shared Windows/Mac setup utility,
+  tests and an explicit release ZIP manifest.
 
 ### Compatibility
 
