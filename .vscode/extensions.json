@@ -1,7 +1,6 @@
 {
   "recommendations": [
     "ms-python.python",
-    "GitHub.copilot",
     "GitHub.copilot-chat"
   ]
 }
