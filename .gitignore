@@ -12,7 +12,8 @@ __pycache__/
 outputs/
 dist/
 build/
-local_data/
+/local_data/*
+!/local_data/README.md
 my_scenarios/
 .ipynb_checkpoints/
 /MANIFEST.json

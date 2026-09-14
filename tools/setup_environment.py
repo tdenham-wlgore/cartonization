@@ -11,6 +11,8 @@ def main():
     if not (3, 10) <= sys.version_info[:2] <= (3, 13):
         print("Use Python 3.10 through 3.13 (3.12 recommended), then run setup again.")
         return 1
+    for folder in ("local_data", "my_scenarios"):
+        (root / folder).mkdir(exist_ok=True)
     environment = root / ".venv"
     python = environment / ("Scripts/python.exe" if sys.platform == "win32" else "bin/python")
     if not python.exists():

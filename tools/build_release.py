@@ -10,6 +10,7 @@ VERSION = "0.2.0"
 FILES = [
     "MANIFEST.in",
     "README.md",
+    "local_data/README.md",
     "CHANGELOG.md",
     "pyproject.toml",
     "constraints.txt",

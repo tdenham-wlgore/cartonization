@@ -23,8 +23,11 @@ Keep the complete folder together. Do not run setup inside the ZIP viewer. If th
 ZIP is on a shared drive, copy and extract it locally first; each person should
 have their own working folder.
 
-Create `local_data` inside the folder for your workbooks and `my_scenarios` for
-saved configurations. These folders and generated outputs are excluded from Git.
+Put your input workbooks in the included [local_data](local_data/README.md) folder.
+Setup creates `my_scenarios` for saved configurations and recreates `local_data`
+if it is missing. Existing files are preserved. User data, saved configurations
+and generated outputs are excluded from normal Git commits; only the input-folder
+guide is tracked.
 
 ## 2. Install the prerequisites
 
@@ -115,7 +118,8 @@ You do not need to activate the environment when using its Python executable.
 
 ## 6. Use your own data
 
-Copy your input workbooks into `local_data`. Ask Copilot to inspect their sheet
+Copy your input workbooks into `local_data`; keep the originals unchanged.
+Ask Copilot to inspect their sheet
 names and column headers, create a configuration in `my_scenarios` using the
 [workflow guide](docs/WORKFLOWS.md), and validate it before running an analysis.
 Paths in a configuration are resolved relative to that configuration's folder.
